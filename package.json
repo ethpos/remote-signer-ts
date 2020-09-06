@@ -1,0 +1,32 @@
+{
+  "name": "ethpos-remote-signer",
+  "version": "0.0.1",
+  "description": "Remote signing gRPC server and client for Ethereum 2.0",
+  "bin": {
+    "ethpos-remote-signer-cli": "./lib/client/client.cli.js",
+    "ethpos-remote-signer": "./lib/server/server.cli.js"
+  },
+  "dependencies": {
+    "@chainsafe/bls": "^4.0.0",
+    "commander": "^6.1.0",
+    "google-proto-files": "^2.2.0",
+    "google-protobuf": "^3.13.0",
+    "grpc": "^1.24.3",
+    "grpc-tools": "^1.9.1",
+    "grpc_tools_node_protoc_ts": "^4.1.4",
+    "log4js": "^6.3.0",
+    "ts-proto": "^1.28.0",
+    "typescript": "^4.0.2"
+  },
+  "devDependencies": {
+    "@types/google-protobuf": "^3.7.3"
+  },
+  "scripts": {
+    "build": "sh scripts/protogen.sh && node_modules/typescript/bin/tsc",
+    "local": "npm i -g",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["ethereum", "staking", "remote", "signature", "validator"],
+  "author": "ETHPOS",
+  "license": "MIT"
+}
