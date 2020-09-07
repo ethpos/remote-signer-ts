@@ -27,7 +27,7 @@ mkdir -p ${PROTO_DEST}
 # cp -r ./node_modules/google-proto-files/google ./proto/
 
 # JavaScript code generation
-protoc \
+./node_modules/grpc-tools/bin/protoc \
     --js_out=import_style=commonjs,binary:${PROTO_DEST} \
     --grpc_out=${PROTO_DEST} \
     --plugin=protoc-gen-grpc=./node_modules/.bin/grpc_tools_node_protoc_plugin \
@@ -36,7 +36,7 @@ protoc \
     --proto_path=./node_modules/google-proto-files \
     google/api/http.proto
 
-protoc \
+./node_modules/grpc-tools/bin/protoc \
     --js_out=import_style=commonjs,binary:${PROTO_DEST} \
     --grpc_out=${PROTO_DEST} \
     --plugin=protoc-gen-grpc=./node_modules/.bin/grpc_tools_node_protoc_plugin \
@@ -45,7 +45,7 @@ protoc \
     --proto_path=./node_modules/google-proto-files \
     google/api/annotations.proto
 
-protoc \
+./node_modules/grpc-tools/bin/protoc \
     --js_out=import_style=commonjs,binary:${PROTO_DEST} \
     --grpc_out=${PROTO_DEST} \
     --plugin=protoc-gen-grpc=./node_modules/.bin/grpc_tools_node_protoc_plugin \
@@ -55,7 +55,7 @@ protoc \
     ./src/proto/*.proto
 
 # TypeScript code generation
-protoc \
+./node_modules/grpc-tools/bin/protoc \
     --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts \
     --ts_out=${PROTO_DEST} \
     -I ./src/proto \
