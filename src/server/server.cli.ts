@@ -11,8 +11,8 @@ program
     .requiredOption('--ca-crt-path <path>', 'Path to CA certificate')
     .requiredOption('--tls-key-path <path>', 'Path to tls key')
     .requiredOption('--tls-crt-path <path>', 'Path to tls certificate')
-    .requiredOption('-p, --port <number>', 'Port number of remote sign server')
-    .option('-H, --host <address>', 'Host', '127.0.0.1')
+    .option('-p, --grpc-port <number>', 'Port number of remote sign server', '4000')
+    .option('-H, --grpc-server-host <address>', 'Host', '127.0.0.1')
     .command('server', {isDefault: true})
     .action((args) => {
         let caCert, tlsKey, tlsCert
@@ -38,8 +38,8 @@ program
             caCert,
             tlsCert,
             tlsKey,
-            port: program.port,
-            host: program.host,
+            port: program.grpcPort,
+            host: program.grpcServerHost,
         })
         server.serve()
     })
