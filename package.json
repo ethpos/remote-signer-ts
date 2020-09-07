@@ -1,6 +1,6 @@
 {
   "name": "@ethpos/remote-signer",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Remote signing gRPC server and client for Ethereum 2.0",
   "bin": {
     "ethpos-remote-signer-cli": "./lib/client/client.cli.js",
