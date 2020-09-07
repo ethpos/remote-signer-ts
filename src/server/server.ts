@@ -22,14 +22,20 @@ const keys: { [pubkey: string]: { secret: string } } = {
 
 class RemoteSignServer implements IRemoteSignerServer {
     listValidatingPublicKeys(call: ServerUnaryCall<Empty>, callback: sendUnaryData<ListPublicKeysResponse>) {
-        logger.info(`list pubkeys request received`)
-        const response = new ListPublicKeysResponse()
-        const pubkeys = Object.keys(keys)
-        pubkeys.forEach(pubkey => {
-            response.addValidatingPublicKeys(pubkey)
-        })
-        logger.debug(`send ${pubkeys.length} keys`)
-        callback(null, response)
+        try {
+            logger.info(`list pubkeys request received`)
+            const response = new ListPublicKeysResponse()
+            const pubkeys = Object.keys(keys)
+            pubkeys.forEach(pubkey => {
+                response.addValidatingPublicKeys(Buffer.from(pubkey, 'hex'))
+            })
+            logger.debug(`send ${pubkeys.length} keys`)
+            callback(null, response)
+        } catch (e) {
+            logger.error(`error getting list of pubkeys: ${e.message}`)
+            const response = new ListPublicKeysResponse()
+            return callback(null, response)
+        }
     }
     sign(call: ServerUnaryCall<SignRequest>, callback: sendUnaryData<SignResponse>) {
         //get key
@@ -38,14 +44,21 @@ class RemoteSignServer implements IRemoteSignerServer {
         const data = call.request.getSigningRoot_asU8()
         const key = keys[pubkey.toString()]
         if (key) {
-            // sign
-            const secret = Uint8Array.from(Buffer.from(key.secret, 'hex'))
-            const signature = sign(secret, data)
-            //send
-            const response = new SignResponse()
-            response.setSignature(signature)
-            logger.debug(`send signature`)
-            return callback(null, response)
+            try {
+                // sign
+                const secret = Uint8Array.from(Buffer.from(key.secret, 'hex'))
+                const signature = sign(secret, data)
+                //send
+                const response = new SignResponse()
+                response.setSignature(signature)
+                logger.debug(`send signature`)
+                return callback(null, response)
+            } catch (e) {
+                logger.error(`error during signing: ${e.message}`)
+                const response = new SignResponse()
+                response.setStatus(SignResponse.Status.FAILED)
+                return callback(null, response)
+            }
         } else {
             logger.error(`pubkey not found: ${pubkey}`)
             const response = new SignResponse()
