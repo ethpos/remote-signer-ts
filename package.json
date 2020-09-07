@@ -1,5 +1,5 @@
 {
-  "name": "@ethpos/ethpos-remote-signer",
+  "name": "@ethpos/remote-signer",
   "version": "0.0.1",
   "description": "Remote signing gRPC server and client for Ethereum 2.0",
   "bin": {

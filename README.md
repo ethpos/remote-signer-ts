@@ -9,7 +9,7 @@ This is a simple, remote signing implementation to be used with the [Prysm](http
 ## Installation
 Install using npm:
 ``` bash
-npm install -g ethpos-remote-signer
+npm install -g @ethpos/remote-signer
 ```
 
 ## Usage
