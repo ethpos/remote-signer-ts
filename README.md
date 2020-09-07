@@ -12,6 +12,8 @@ Install using npm:
 npm install -g @ethpos/remote-signer
 ```
 
+Depending on your environment you might need sudo to install it globally.
+
 ## Usage
 
 You need valid certificate files. Example certificates you can find in the certs folder of the repository.
