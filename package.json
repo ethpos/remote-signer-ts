@@ -21,6 +21,10 @@
   "devDependencies": {
     "@types/google-protobuf": "^3.7.3"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ethpos/remote-signer-ts"
+  },
   "scripts": {
     "build": "sh scripts/protogen.sh && node_modules/typescript/bin/tsc",
     "local": "npm i -g",
