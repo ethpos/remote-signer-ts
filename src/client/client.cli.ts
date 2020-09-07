@@ -7,22 +7,22 @@ const config = require('../../package.json')
 program
     .version(config.version)
     .description("An example CLI remote signing")
-    .requiredOption('-c, --ca-cert <path>', 'Path to CA certificate')
-    .requiredOption('-p, --port <number>', 'Port number of remote sign server')
-    .option('-H, --host <address>', 'Host', '127.0.0.1')
+    .requiredOption('-c, --ca-crt-path <path>', 'Path to CA certificate')
+    .option('-P, --grpc-port <number>', 'Port number of remote sign server', '4000')
+    .option('-H, --grpc-server-host <address>', 'Host', '127.0.0.1')
     .option('--format <type>', 'json or plain', 'json')
     .command('list')
     .action((args) => {
         let ca
         try {
-            ca = readFileSync(program.caCert)
+            ca = readFileSync(program.caCrtPath)
         } catch (e) {
             console.error('Error loading CA cert')
             process.exit(1)
         }
         const client = new Client({
-            host: program.host,
-            port: program.port,
+            host: program.grpcServerHost,
+            port: program.grpcPort,
             caCert: ca,
         })
         client.listValidatingPublicKeys((err, pubkeys) => {
@@ -49,7 +49,7 @@ program
 
 program
     .command('sign')
-    .requiredOption('--pubkey <string>', 'Public key in hex format')
+    .requiredOption('-p, --pubkey <string>', 'Public key in hex format')
     .requiredOption('-d, --data <string>', 'Data to sign')
     .action((args) => {
         let ca
