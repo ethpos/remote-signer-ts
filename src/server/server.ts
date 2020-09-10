@@ -8,24 +8,18 @@ logger.level = "debug";
 
 import { initBLS, sign } from '@chainsafe/bls'
 import { ServerOptions } from './server.interfaces'
+import { Keyvault } from '../keyvault/keyvault.interfaces'
+import { StaticKeyvault } from '../keyvault/static.keyvault'
 
 initBLS().then(() => logger.info('BLS intialized'))
 
-const keys: { [pubkey: string]: { secret: string } } = {
-    'a99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c': {
-        secret: '25295f0d1d592a90b333e26e85149708208e9f8e8bc18f6c77bd62f8ad7a6866',
-    },
-    'b99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c': {
-        secret: '25295f0d1d592a90b333e26e85149708208e9f8e8bc18f6c77bd62f8ad7a6866',
-    },
-}
-
 class RemoteSignServer implements IRemoteSignerServer {
-    listValidatingPublicKeys(call: ServerUnaryCall<Empty>, callback: sendUnaryData<ListPublicKeysResponse>) {
+    constructor(private keyvault: Keyvault = new StaticKeyvault()) { }
+    async listValidatingPublicKeys(call: ServerUnaryCall<Empty>, callback: sendUnaryData<ListPublicKeysResponse>) {
         try {
             logger.info(`list pubkeys request received`)
             const response = new ListPublicKeysResponse()
-            const pubkeys = Object.keys(keys)
+            const pubkeys = await this.keyvault.listPublicKeys()
             pubkeys.forEach(pubkey => {
                 response.addValidatingPublicKeys(Buffer.from(pubkey, 'hex'))
             })
@@ -37,50 +31,48 @@ class RemoteSignServer implements IRemoteSignerServer {
             return callback(null, response)
         }
     }
-    sign(call: ServerUnaryCall<SignRequest>, callback: sendUnaryData<SignResponse>) {
+    async sign(call: ServerUnaryCall<SignRequest>, callback: sendUnaryData<SignResponse>) {
         //get key
         const pubkey = Buffer.from(call.request.getPublicKey_asU8()).toString('hex')
         logger.info(`sign request for pubkey ${pubkey}`)
         const data = call.request.getSigningRoot_asU8()
-        const key = keys[pubkey.toString()]
-        if (key) {
-            try {
-                // sign
-                const secret = Uint8Array.from(Buffer.from(key.secret, 'hex'))
-                const signature = sign(secret, data)
-                //send
-                const response = new SignResponse()
-                response.setSignature(signature)
-                logger.debug(`send signature`)
-                return callback(null, response)
-            } catch (e) {
-                logger.error(`error during signing: ${e.message}`)
-                const response = new SignResponse()
-                response.setStatus(SignResponse.Status.FAILED)
-                return callback(null, response)
+        try {
+            const secretStr = await this.keyvault.getSecretKey(pubkey)
+            const secret = Uint8Array.from(Buffer.from(secretStr, 'hex'))
+            // sign
+            const signature = sign(secret, data)
+            //send
+            const response = new SignResponse()
+            response.setSignature(signature)
+            logger.debug(`send signature`)
+            return callback(null, response)
+        } catch (e) {
+            switch (e.message) {
+                case 'ERR_KEY_NOT_FOUND':
+                    logger.error(`no key found for pubkey ${pubkey}`)
+                    break
+                default:
+                    logger.error(`error during signing: ${e.message}`)
             }
-        } else {
-            logger.error(`pubkey not found: ${pubkey}`)
             const response = new SignResponse()
             response.setStatus(SignResponse.Status.FAILED)
             return callback(null, response)
         }
-
     }
 }
 
 export class Server {
     server: GRPCServer
-    constructor(options: ServerOptions) {
+    constructor(options: ServerOptions, keyvault?: Keyvault) {
         const bindAddress = `${options.host}:${options.port}`
         this.server = new GRPCServer()
-        this.server.addService<IRemoteSignerServer>(RemoteSignerService, new RemoteSignServer())
+        this.server.addService<IRemoteSignerServer>(RemoteSignerService, new RemoteSignServer(keyvault))
         this.server.bind(bindAddress, ServerCredentials.createSsl(
             options.caCert,
             [{
                 private_key: options.tlsKey,
                 cert_chain: options.tlsCert
-            }]
+            }],
         ))
         logger.info(`Remote signer listing on ${bindAddress}`)
     }
