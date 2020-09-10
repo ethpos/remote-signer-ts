@@ -81,6 +81,3 @@ export class Server {
         this.server.start()
     }
 }
-
-export function serve() {
-}
