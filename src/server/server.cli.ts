@@ -2,6 +2,8 @@
 import { Server } from './server'
 import { program } from 'commander'
 import { readFileSync } from 'fs'
+import { StaticKeyvault } from '../keyvault/static.keyvault'
+import { Keyvault } from '../keyvault/keyvault.interfaces'
 
 const config = require('../../package.json')
 
@@ -13,6 +15,7 @@ program
     .requiredOption('--tls-crt-path <path>', 'Path to tls certificate')
     .option('-p, --grpc-port <number>', 'Port number of remote sign server', '4000')
     .option('-H, --grpc-server-host <address>', 'Host', '127.0.0.1')
+    .option('-K, --keyvault <keyvault>', 'Keyvault type', 'static')
     .command('server', {isDefault: true})
     .action((args) => {
         let caCert, tlsKey, tlsCert
@@ -34,13 +37,22 @@ program
             console.error('Error loading TLS key')
             process.exit(1)
         }
+        let keyvault: Keyvault
+        switch(program.keyvault){
+            case 'static':
+                keyvault = new StaticKeyvault()
+                break
+            default:
+                console.error(`unknown keyvault type ${program.keyvault}`)
+                process.exit(1)
+        }
         const server = new Server({
             caCert,
             tlsCert,
             tlsKey,
             port: program.grpcPort,
             host: program.grpcServerHost,
-        })
+        }, keyvault)
         server.serve()
     })
 
